@@ -1,90 +1,122 @@
-"use client"
+"use client";
 // components/NameCard.js
-export default function NameCard() {
-  const containerStyle = {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100vh",
-    backgroundColor: "black",
-    margin: "0",
-  };
+import React, { useState, useEffect } from 'react';
+import styled from '@emotion/styled';
 
-  const cardStyle = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "350px",
-    height: "300px",
-    borderRadius: "15px",
-    boxShadow: "0 8px 15px rgba(0, 0, 0, 0.2)",
-    color: "white",
-    fontFamily: "Arial, sans-serif",
-    textAlign: "center",
-    overflow: "hidden",
-    position: "relative",
-  };
+const Container = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: black;
+  margin: 0;
+  flex-wrap: wrap;
+`;
 
-  const gradientStyle = {
-    position: "absolute",
-    top: "0",
-    left: "0",
-    width: "100%",
-    height: "100%",
-    background: "linear-gradient(45deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1)",
-    backgroundSize: "400% 400%",
-    animation: "gradientAnimation 10s ease infinite",
-    zIndex: "-1",
-  };
+const Card = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 350px;
+  height: 300px;
+  border-radius: 15px;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  overflow: hidden;
+  position: relative;
+  margin: 20px;
+`;
 
-  const imageStyle = {
-    width: "100px",
-    height: "100px",
-    borderRadius: "50%",
-    objectFit: "cover",
-    marginBottom: "10px",
-    border: "3px solid white",
-  };
+const Gradient = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1);
+  background-size: 400% 400%;
+  animation: gradientAnimation 10s ease infinite;
+  z-index: -1;
+`;
 
-  const nameStyle = {
-    fontSize: "24px",
-    fontWeight: "bold",
-    margin: "0",
-  };
+const Image = styled.img`
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+  border: 3px solid white;
+`;
 
-  const subtitleStyle = {
-    fontSize: "16px",
-    marginTop: "5px",
-    opacity: "0.9",
-  };
+const Name = styled.h1`
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+`;
+
+const Subtitle = styled.p`
+  font-size: 16px;
+  margin-top: 5px;
+  opacity: 0.9;
+`;
+
+const ErrorMessage = styled.p`
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+`;
+
+const NamesList = () => {
+  const [names, setNames] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchNames = async () => {
+      try {
+        const context = require.context('../../public/names', true, /name.json$/); // Cargar todos los name.json
+        const allNames = context.keys().map((filename) => {
+          try {
+            const nameData = context(filename);
+            if (!nameData.name || typeof nameData.name !== 'string') {
+              throw new Error(`El archivo ${filename} no contiene un nombre válido.`);
+            }
+            return nameData.name;
+          } catch (err) {
+            console.error(err);
+            return null; // En caso de error, se retorna null para manejarlo más tarde
+          }
+        }).filter(Boolean); // Filtrar nulls de nombres no válidos
+        setNames(allNames);
+        setError(null); // Resetear el error si todo está bien
+      } catch (err) {
+        setError('Hubo un problema al cargar los archivos. Por favor revisa los archivos JSON.');
+        console.error(err);
+      }
+    };
+
+    fetchNames();
+  }, []);
 
   return (
-    <div style={containerStyle}>
-      <div style={cardStyle}>
-        <div style={gradientStyle}></div>
-        <img
-          src="https://picsum.photos/200/300"
-          alt="Cute Kitten"
-          style={imageStyle}
-        />
-        <h1 style={nameStyle}>Hola Glender!</h1>
-        <p style={subtitleStyle}>Bienvenid@ a mi portafolio</p>
-      </div>
-
-      <style jsx>{`
-        @keyframes gradientAnimation {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-      `}</style>
-    </div>
+    <Container>
+      {error && <ErrorMessage>{error}</ErrorMessage>} {/* Mostrar error si hay */}
+      {names.length > 0 ? (
+        names.map((name, index) => (
+          <Card key={index}>
+            <Gradient />
+            <Image src={`https://picsum.photos/200/300?random=${index}`} alt="Random" />
+            <Name>{name}</Name>
+            <Subtitle>Bienvenid@ a mi portafolio</Subtitle>
+          </Card>
+        ))
+      ) : (
+        <ErrorMessage>No se encontraron nombres válidos para mostrar.</ErrorMessage>
+      )}
+    </Container>
   );
-}
+};
+
+export default NamesList;
