@@ -45,8 +45,8 @@ steps:
         fi
 
         # Ejecutar los comandos de Docker Compose
-        sudo docker-compose -f $(mainDockerComposeFile) down
-        sudo docker-compose -f $(mainDockerComposeFile) up -d --build
+        sudo docker-compose down
+        sudo docker-compose up -d --build
       EOF
     displayName: 'Execute Deployment Commands for Main'
     condition: eq(variables['Build.SourceBranchName'], 'master')
