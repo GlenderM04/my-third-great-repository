@@ -2,63 +2,51 @@ trigger:
   branches:
     include:
       - master
-    exclude:
-      - development
- 
+
+pool:
+  vmImage: 'ubuntu-latest'
+
 variables:
-  vmImageName: 'ubuntu-latest'
- 
-stages:
-- stage: Build
-  displayName: Build stage
-  jobs:
-  - job: Build
-    displayName: Build
-    pool:
-      vmImage: $(vmImageName)
- 
-    steps:
-    - task: NodeTool@0
-      inputs:
-        versionSpec: '20.x'
-      displayName: 'Install Node.js'
- 
-    - script: |
-        npm install
-        npm run build
-      displayName: 'npm install and build'
- 
-    - task: ArchiveFiles@2
-      displayName: 'Archive files'
-      inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
-        includeRootFolder: false
-        archiveType: zip
-        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-        replaceExistingArchive: true
- 
-    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-      artifact: drop
- 
-# - stage: Deploy
-#   displayName: Deploy stage
-#   dependsOn: Build
-#   condition: succeeded()
-#   jobs:
-#   - deployment: Deploy
-#     displayName: Deploy
-#     environment: $(environmentName)
-#     pool:
-#       vmImage: $(vmImageName)
-#     strategy:
-#       runOnce:
-#         deploy:
-#           steps:
-#           - task: AzureWebApp@1
-#             inputs:
-#               azureSubscription: '$(azureSubscription)'
-#               appType: 'webAppLinux'
-#               appName: 'optiplanepn'
-#               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-#               runtimeStack: 'NODE|18-lts'
-#               startUpCommand: 'pm2 start /home/site/wwwroot/ecosystem.config.js --no-daemon'
+  # Define el detalle del servidor para la rama main
+  mainServer: '52.165.128.155'
+  mainKey: 'id_rsa'
+
+  # Define el archivo docker-compose
+  mainDockerComposeFile: 'docker-compose.yml'
+
+steps:
+  # Setup SSH para la rama main
+  - task: InstallSSHKey@0
+    displayName: 'Setup SSH for Main'
+    condition: eq(variables['Build.SourceBranchName'], 'master')
+    inputs:
+      sshKeySecureFile: '$(mainKey)'  # Clave privada para main
+      hostName: '$(mainServer)'
+
+  # Agrega el host al archivo known_hosts para main
+  - script: |
+      mkdir -p ~/.ssh
+      chmod 700 ~/.ssh
+      ssh-keyscan -H $(mainServer) >> ~/.ssh/known_hosts
+      chmod 644 ~/.ssh/known_hosts
+    displayName: 'Add SSH Host to Known Hosts for Main'
+    condition: eq(variables['Build.SourceBranchName'], 'master')
+
+  # Ejecuta los comandos de despliegue para main
+  - script: |
+      ssh ubuntu@$(mainServer) << 'EOF'
+        cd /home/ubuntu/skyproject/my-second-great-repository
+        git pull origin master
+
+        # Validar si la ruta existe
+        if [ ! -d "/home/ubuntu/skyproject/my-second-great-repository" ]; then
+          echo "La ruta /home/ubuntu/skyproject/my-second-great-repository no existe. Abortando el proceso."
+          exit 1
+        fi
+
+        # Ejecutar los comandos de Docker Compose
+        sudo docker-compose -f $(mainDockerComposeFile) down
+        sudo docker-compose -f $(mainDockerComposeFile) up -d --build
+      EOF
+    displayName: 'Execute Deployment Commands for Main'
+    condition: eq(variables['Build.SourceBranchName'], 'master')
