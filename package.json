@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "my-great-repository": "file:",
     "next": "14.2.20",
     "react": "^18",
     "react-dom": "^18"
