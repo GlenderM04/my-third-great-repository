@@ -5,10 +5,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prod
-    image: my-great-repository-image  # Cambia el nombre de la imagen
-    container_name: my-great-repository-docker-container  # Asegúrate de que sea único
+    image: my-third-great-repository-image  # Cambia el nombre de la imagen
+    container_name: my-third-great-repository-docker-container  # Asegúrate de que sea único
     ports:
-      - "3000:3000"  # Mapeo del puerto externo 3041 al interno 3000
+      - "3001:3000"  # Mapeo del puerto externo 3041 al interno 3000
 
 volumes:
   node_modules:

@@ -35,12 +35,12 @@ steps:
   # Ejecuta los comandos de despliegue para main
   - script: |
       ssh ubuntu@$(mainServer) << 'EOF'
-        cd /home/ubuntu/skyproject/my-second-great-repository
+        cd /home/ubuntu/skyproject/my-third-great-repository
         git pull origin master
 
         # Validar si la ruta existe
-        if [ ! -d "/home/ubuntu/skyproject/my-second-great-repository" ]; then
-          echo "La ruta /home/ubuntu/skyproject/my-second-great-repository no existe. Abortando el proceso."
+        if [ ! -d "/home/ubuntu/skyproject/my-third-great-repository" ]; then
+          echo "La ruta /home/ubuntu/skyproject/my-third-great-repository no existe. Abortando el proceso."
           exit 1
         fi
 
